@@ -154,10 +154,39 @@ function void apb_master_collector::write(apb_master_tx t);
     `uvm_info(get_type_name(), $sformatf("mosi_data = %0h", coll_pkt.mosi_data),UVM_HIGH)
   end
 
+  if(rg.get_name == "RXFIFO") begin : RXFIFIO
+
+    bit [31:0]miso_data_local;
+
+    coll_pkt.j = 0;
+
+    miso_data_local = rg.get();
+    `uvm_info(get_type_name(), $sformatf("miso_data_local = %0h", miso_data_local),UVM_HIGH)
+
+    `uvm_info(get_type_name(), $sformatf("spi_len[16:31] = %0h", coll_pkt.spi_length[31:16]),UVM_HIGH)
+    for(int i=0; i<coll_pkt.spi_length[31:16]; i++) begin
+      coll_pkt.miso_data[i] = miso_data_local[i];
+      coll_pkt.data[coll_pkt.j+i] = miso_data_local[i];
+    end
+    coll_pkt.flag = coll_pkt.flag + 1;
+    `uvm_info(get_type_name(), $sformatf("miso_data = %0h", coll_pkt.miso_data),UVM_HIGH)
+  end
+
   if(coll_pkt.flag == 'd3) begin
     `uvm_info(get_type_name(),$sformatf("final_data=%0h",coll_pkt.data),UVM_HIGH)
     apb_master_coll_analysis_port.write(coll_pkt);
-    coll_pkt.flag = 0;
+        
+    //Resetting the collector_struct_packet
+    coll_pkt.spi_length   = 0;
+    coll_pkt.cmd_len      = 0;
+    coll_pkt.addr_len     = 0;
+    coll_pkt.mosi_data_len= 0;
+    coll_pkt.flag         = 0;
+    coll_pkt.cmd          = 0;
+    coll_pkt.addr         = 0;
+    coll_pkt.mosi_data    = 0;
+    coll_pkt.j            = 0;
+    coll_pkt.data         = 0;
   end
 
   `uvm_info(get_type_name(),$sformatf("Req print = %0s",t.sprint()),UVM_HIGH)
