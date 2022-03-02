@@ -126,7 +126,7 @@ task pulpino_spi_master_ip_scoreboard::run_phase(uvm_phase phase);
 
     else begin
       `uvm_info(get_type_name(),$sformatf("apb_pwdata from apb_master and master_out_slave_in from slave is not equal"),UVM_HIGH);
-      `uvm_info("SB_PWDATA_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave SPI_DATA = 'h%0x",apb_data,spi_data), UVM_HIGH); 
+      `uvm_info("SB_PWDATA NOT_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave SPI_DATA = 'h%0x",apb_data,spi_data), UVM_HIGH); 
       byte_data_cmp_failed_master_pwdata_slave_mosi_count++;
     end
 

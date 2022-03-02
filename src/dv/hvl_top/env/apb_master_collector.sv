@@ -168,7 +168,7 @@ function void apb_master_collector::write(apb_master_tx t);
       coll_pkt.miso_data[i] = miso_data_local[i];
       coll_pkt.data[coll_pkt.j+i] = miso_data_local[i];
     end
-    coll_pkt.flag = coll_pkt.flag + 1;
+    //coll_pkt.flag = coll_pkt.flag + 1;
     `uvm_info(get_type_name(), $sformatf("miso_data = %0h", coll_pkt.miso_data),UVM_HIGH)
   end
 
