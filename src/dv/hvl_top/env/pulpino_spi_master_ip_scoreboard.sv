@@ -40,6 +40,15 @@ class pulpino_spi_master_ip_scoreboard extends uvm_scoreboard;
   //to keep track of number of byte wise compared failed master_tx_data
   int byte_data_cmp_failed_master_pwdata_slave_mosi_count = 0;
 
+  //Variable byte_data_cmp_verified_master_pwdata_slave_mosi_count
+  //to keep track of number of byte wise compared verified master_tx_data
+  int byte_data_cmp_verified_master_pwdata_slave_miso_count = 0;
+
+  //Variable byte_data_cmp_failed_master_pwdata_slave_mosi_count
+  //to keep track of number of byte wise compared failed master_tx_data
+  int byte_data_cmp_failed_master_pwdata_slave_miso_count = 0;
+
+  //-------------------------------------------------------
   //-------------------------------------------------------
   // Externally defined Tasks and Functions
   //-------------------------------------------------------
@@ -90,12 +99,15 @@ task pulpino_spi_master_ip_scoreboard::run_phase(uvm_phase phase);
   forever begin
 
     bit [96:0]apb_data;
+    bit [96:0]apb_read_data;
 
-    bit [96:0]spi_data;
+    bit [96:0]spi_mosi_data;
+    bit [96:0]spi_miso_data;
     
     `uvm_info(get_type_name(),$sformatf("before calling master's analysis fifo get method"),UVM_HIGH)
     apb_master_analysis_fifo.get(apb_data_packet);
     apb_data = apb_data_packet.data;
+    apb_read_data = apb_data_packet.miso_data;
     apb_master_tx_count++;
 
 
@@ -111,25 +123,42 @@ task pulpino_spi_master_ip_scoreboard::run_phase(uvm_phase phase);
 
 
     foreach(spi_slave_tx_h.master_out_slave_in[i]) begin
-      spi_data = {spi_data,spi_slave_tx_h.master_out_slave_in[i]};
+      spi_mosi_data = {spi_mosi_data,spi_slave_tx_h.master_out_slave_in[i]};
+    end
+
+    foreach(spi_slave_tx_h.master_in_slave_out[i]) begin
+      spi_miso_data = {spi_miso_data,spi_slave_tx_h.master_in_slave_out[i]};
     end
 
     `uvm_info(get_type_name(),$sformatf("--\n-----------------------------------------------SCOREBOARD COMPARISIONS--------------------------------------------------"),UVM_HIGH)
 
     //Verifying pwdata in master and slave 
-    if(apb_data == spi_data) begin
+    if(apb_data == spi_mosi_data) begin
       `uvm_info(get_type_name(),$sformatf("apb_pwdata from apb_master and master_out_slave_in from spi_slave is equal"),UVM_HIGH);
-      `uvm_info("SB_PWDATA_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave SPI_DATA = 'h%0x",apb_data,spi_data), UVM_HIGH); 
+      `uvm_info("SB_PWDATA_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave spi_mosi_data = 'h%0x",apb_data,spi_mosi_data), UVM_HIGH); 
 
       byte_data_cmp_verified_master_pwdata_slave_mosi_count++;
     end
 
     else begin
       `uvm_info(get_type_name(),$sformatf("apb_pwdata from apb_master and master_out_slave_in from slave is not equal"),UVM_HIGH);
-      `uvm_info("SB_PWDATA NOT_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave SPI_DATA = 'h%0x",apb_data,spi_data), UVM_HIGH); 
+      `uvm_info("SB_PWDATA NOT_MATCHED WITH MOSI0", $sformatf("Master APB_DATA = 'h%0x and Slave spi_mosi_data = 'h%0x",apb_data,spi_mosi_data), UVM_HIGH); 
       byte_data_cmp_failed_master_pwdata_slave_mosi_count++;
     end
 
+    //Verifying pwdata in master and slave 
+    if(apb_read_data == spi_miso_data) begin
+      `uvm_info(get_type_name(),$sformatf("apb_pwdata from apb_master and master_in_slave_out from spi_slave is equal"),UVM_HIGH);
+      `uvm_info("SB_PRDATA_MATCHED WITH MISO0", $sformatf("Master APB_READ_DATA = 'h%0x and Slave spi_miso_data = 'h%0x",apb_read_data,spi_miso_data), UVM_HIGH); 
+
+      byte_data_cmp_verified_master_pwdata_slave_miso_count++;
+    end
+
+    else begin
+      `uvm_info(get_type_name(),$sformatf("apb_pwdata from apb_master and master_in_slave_out from spi_slave is not equal"),UVM_HIGH);
+      `uvm_info("SB_PRDATA_NOT_MATCHED WITH MISO0", $sformatf("Master APB_READ_DATA = 'h%0x and Slave spi_miso_data = 'h%0x",apb_read_data,spi_miso_data), UVM_HIGH); 
+      byte_data_cmp_failed_master_pwdata_slave_miso_count++;
+    end
     `uvm_info(get_type_name(),$sformatf("--\n-----------------------------------------END OF SCOREBOARD COMPARISIONS--------------------------------------------------"),UVM_HIGH)
   end
 
